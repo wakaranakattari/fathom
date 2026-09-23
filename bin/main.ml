@@ -11,14 +11,27 @@ type mode =
 
 let version = "0.1.0"
 
-(* Finds --config value in argv before full parse. *)
-let pre_scan_config () =
-  let rec loop i =
-    if i >= Array.length Sys.argv - 1 then None
-    else if Sys.argv.(i) = "--config" then Some Sys.argv.(i + 1)
-    else loop (i + 1)
+(** Collects process arguments after the program name.
+    A token equal to "--" is a positional separator with no meaning
+    of its own and is removed. Remaining tokens keep original order.
+    @return argument list without the program name. *)
+let option_args () =
+  Array.to_list Sys.argv
+  |> List.tl
+  |> List.filter (fun s -> s <> "--")
+
+(** Locates the [--config] value in pre-parsed option arguments.
+    A separate pass precedes full parsing so file options establish
+    defaults before command line flags override them.
+    @param opt_args filtered argument list.
+    @return config path when the flag is present, None otherwise. *)
+let pre_scan_config opt_args =
+  let rec loop = function
+    | [] -> None
+    | "--config" :: value :: _ -> Some value
+    | _ :: rest -> loop rest
   in
-  loop 1
+  loop opt_args
 
 (** Combines history and repository boosts with base scores.
     Results sort in decreasing order of total score with path order
@@ -87,9 +100,11 @@ let handle_selection ~hist ~hist_path ~no_history path (act : Tui.act) =
   | Tui.Exec cmd -> exit (run_exec cmd path))
 
 let () =
-  (* Loads config before CLI defaults. *)
+  (* Configuration establishes defaults. Command line flags override
+      file values. Parsing consumes filtered option arguments. *)
+  let opt_args = option_args () in
   let cfg_path =
-    match pre_scan_config () with
+    match pre_scan_config opt_args with
     | Some p -> p
     | None -> Config.default_path ()
   in
@@ -143,10 +158,11 @@ let () =
     ("--version", Arg.Set show_version, "Print version and exit.");
   ] in
   let usage = "fathom [QUERY] [ROOTS...] [options]" in
-  Arg.parse speclist (fun s ->
+  let anon s =
     if !query = "" then query := s
     else extra_roots := s :: !extra_roots
-  ) usage;
+  in
+  Arg.parse_argv (Array.of_list (Sys.argv.(0) :: opt_args)) speclist anon usage;
   if !show_version then begin
     Printf.printf "fathom %s\n%!" version;
     exit 0
