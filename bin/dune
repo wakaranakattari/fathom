@@ -1,0 +1,4 @@
+(executable
+ (name main)
+ (public_name fathom)
+ (libraries scan matcher history search preview git config clip plain tui unix))
