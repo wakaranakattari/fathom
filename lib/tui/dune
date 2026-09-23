@@ -1,0 +1,3 @@
+(library
+ (name tui)
+ (libraries scan matcher history search preview git config clip unix))
