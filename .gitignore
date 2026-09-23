@@ -1,0 +1,9 @@
+_build/
+*.install
+.merlin
+*.annot
+*~
+.DS_Store
+fathom.opam
+.lsp/
+.clj-kondo/
