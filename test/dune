@@ -1,0 +1,15 @@
+(test
+ (name test_matcher)
+ (libraries matcher))
+
+(test
+ (name test_search)
+ (libraries search))
+
+(test
+ (name test_config)
+ (libraries config unix))
+
+(test
+ (name test_preview)
+ (libraries preview))
