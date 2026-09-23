@@ -1,0 +1,3 @@
+(library
+ (name search)
+ (libraries unix))
